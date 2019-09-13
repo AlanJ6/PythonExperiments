@@ -38,14 +38,23 @@ class Player:
         self.name = name
         self.balance = bal
         self.bet = bet
+        self.count = 0
 
     def draw(self, deck):
         self.hand.append(deck.draw())
         return self
 
     def showHand(self):
-        for card in self.hand:
-            print('\n'+self.name+'`s current hand: '+card.show())
+        print(self.name + '`s current hand: ')
+        for cards in self.hand:
+            print(cards.value, end=" ")
+        print('\n')
+        # [print(i.value) for i in self.hand]
+
+    def checkHand(self):
+        for cards in self.hand:
+            self.count += cards.value
+        return self.count
 
 class Blackjack:
 
@@ -53,13 +62,13 @@ class Blackjack:
         self.gameinfo = {
             'win': 0,
             'lose': 0,
-            'draw': 0
+            'draw': 0,
+            'isWon': False
         }
+        self.deck = Deck()
         self.startgame()
 
     def startgame(self):
-        deck = Deck()
-
         playername = input('What is your name: ')
         playerbal = int(input('What is your current Balance: '))
         playerbet = int(input('How much are you betting: '))
@@ -70,23 +79,54 @@ class Blackjack:
 
         player = Player(playername, playerbal, playerbet)
         dealer = Player("Dealer", 0, 0)
-        player.draw(deck)
-        dealer.draw(deck)
+        player.draw(self.deck)
+        dealer.draw(self.deck)
 
         # for item in player.hand:print(item.value, sep='\n')
         # exit()
 
-        while deck.cards != []:
+        while self.gameinfo['isWon'] == False:
             player.showHand()
             dealer.showHand()
             self.nextMove(player, dealer)
 
+        self.checkWinner(player, dealer)
+
+
     def nextMove(self, player, dealer):
-        playermove = input('Will you stand or hit? ').lower()
+        playermove = input('Will you stand or hit or stop? ').lower()
 
         if playermove == 'stand':
-            dealer.draw()
+            dealer.draw(self.deck)
+            if dealer.checkHand() == 21 or player.checkHand() == 21:
+                self.gameinfo['isWon'] = True
+            elif dealer.checkHand() >= 21 or player.checkHand() >= 21:
+                self.gameinfo['isWon'] = True
         elif playermove == 'hit':
-            player.draw()
+            player.draw(self.deck)
+            dealer.draw(self.deck)
+            if dealer.checkHand() == 21 or player.checkHand() == 21:
+                self.gameinfo['isWon'] = True
+            elif dealer.checkHand() >= 21 or player.checkHand() >= 21:
+                self.gameinfo['isWon'] = True
+        elif playermove == 'stop':
+            self.gameinfo['isWon'] = True
+        else:
+            print('Please either Stand or Hit or Stop.\n')
+            playermove = input('Will you stand or hit or stop? ').lower()
+
+    def checkWinner(self, player, dealer):
+        if dealer.checkHand() == 21:
+            print('Dealer has won!')
+        elif player.checkHand() == 21:
+            print('Player has won!')
+        elif dealer.checkHand() >= 21:
+            print('Dealer is over 21. Player has won!')
+        elif player.checkHand() >= 21:
+            print('Player is over 21. Dealer has won!')
+        elif player.checkHand() > dealer.checkHand():
+            print('Player hand is greater than dealer')
+        else:
+            print('Dealer has won.')
 
 Blackjack()
